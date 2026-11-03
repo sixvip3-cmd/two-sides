@@ -55,7 +55,7 @@ end
 local function updateBalanceDisplay(player: Player, data)
 	player:SetAttribute("Shards", data.Shards)
 	local leaderstats = player:FindFirstChild("leaderstats")
-	local value = leaderstats and leaderstats:FindFirstChild("💠")
+	local value = leaderstats and leaderstats:FindFirstChild("Осколки")
 	if value and value:IsA("IntValue") then
 		value.Value = data.Shards
 	end
@@ -171,7 +171,7 @@ function EconomyService.onRoomCompleted(session, skipped: boolean)
 			if not skipped then
 				local amount = math.floor(Rewards.RoomComplete * rewardMultiplier(player, session))
 				if EconomyService.addShards(player, amount, true) then
-					notify(player, string.format("+%d 💠 за комнату", amount), "success")
+					notify(player, string.format("+%d осколков за комнату", amount), "success")
 				end
 			end
 		end
@@ -185,7 +185,7 @@ function EconomyService.onChapterCompleted(session)
 			data.ChaptersCompleted += 1
 			local amount = math.floor(Rewards.ChapterComplete * rewardMultiplier(player, session))
 			if EconomyService.addShards(player, amount, true) then
-				notify(player, string.format("+%d 💠 за главу!", amount), "success")
+				notify(player, string.format("+%d осколков за главу!", amount), "success")
 			end
 		end
 	end
@@ -233,7 +233,7 @@ for _, key in EconomyConfig.ShardPackOrder do
 	GRANTS[key] = function(player)
 		local amount = Products[key].shards
 		EconomyService.addShards(player, amount, false)
-		notify(player, string.format("+%d 💠 — спасибо за покупку!", amount), "success")
+		notify(player, string.format("+%d осколков — спасибо за покупку!", amount), "success")
 	end
 end
 
@@ -348,7 +348,7 @@ local function setupPlayer(player: Player, data)
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
 	local shards = Instance.new("IntValue")
-	shards.Name = "💠"
+	shards.Name = "Осколки"
 	shards.Value = data.Shards
 	shards.Parent = leaderstats
 	leaderstats.Parent = player

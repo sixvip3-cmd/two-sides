@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local CompanionConfig = require(ReplicatedStorage.Shared.CompanionConfig)
 local Net = require(ReplicatedStorage.Shared.Net)
+local PetModels = require(ReplicatedStorage.Shared.PetModels)
 
 local CompanionService = {}
 
@@ -62,55 +63,8 @@ end
 -- Внешний вид
 --------------------------------------------------------------------------------
 
-local function noPhysics(part: BasePart)
-	part.CanCollide = false
-	part.CanTouch = false
-	part.CanQuery = false
-	part.Massless = true
-end
-
-local function buildCompanion(def): BasePart
-	local body = Instance.new("Part")
-	body.Name = "Companion"
-	body.Shape = if def.shape == "Block" then Enum.PartType.Block else Enum.PartType.Ball
-	body.Size = Vector3.one * 1.6
-	body.Color = def.color
-	body.Material = if def.glow then Enum.Material.Neon else Enum.Material.SmoothPlastic
-	body.TopSurface = Enum.SurfaceType.Smooth
-	body.BottomSurface = Enum.SurfaceType.Smooth
-	noPhysics(body)
-
-	-- Глазки
-	for _, x in { -0.35, 0.35 } do
-		local eye = Instance.new("Part")
-		eye.Name = "Eye"
-		eye.Shape = Enum.PartType.Ball
-		eye.Size = Vector3.one * 0.34
-		eye.Color = Color3.fromRGB(20, 20, 26)
-		eye.Material = Enum.Material.SmoothPlastic
-		noPhysics(eye)
-		-- Weld с явным C0: смещение глаза не зависит от того, где деталь была при создании
-		local weld = Instance.new("Weld")
-		weld.Part0 = body
-		weld.Part1 = eye
-		weld.C0 = CFrame.new(x, 0.18, -0.7)
-		weld.Parent = eye
-		eye.Parent = body
-	end
-
-	if def.glow then
-		local light = Instance.new("PointLight")
-		light.Color = def.color
-		light.Range = 8
-		light.Brightness = 1.5
-		light.Parent = body
-	end
-
-	local attachment = Instance.new("Attachment")
-	attachment.Name = "CompanionAttachment"
-	attachment.Parent = body
-	return body
-end
+-- Масштаб питомца рядом с игроком (модели в PetSpecs примерно 2.3 studs ростом)
+local PET_SCALE = 0.75
 
 local function removeCompanion(character: Model)
 	local existing = character:FindFirstChild("Companion")
@@ -143,24 +97,32 @@ local function attachCompanion(player: Player)
 	target.Position = FOLLOW_OFFSET
 	target.Parent = root
 
-	local body = buildCompanion(def)
-	body.CFrame = root.CFrame * CFrame.new(FOLLOW_OFFSET)
+	local model = PetModels.build(data.Equipped, root.CFrame * CFrame.new(FOLLOW_OFFSET), PET_SCALE)
+	if not model or not model.PrimaryPart then
+		target:Destroy()
+		return
+	end
+	model.Name = "Companion"
+	local body = model.PrimaryPart
+	local attachment = Instance.new("Attachment")
+	attachment.Name = "CompanionAttachment"
+	attachment.Parent = body
 
 	local align = Instance.new("AlignPosition")
-	align.Attachment0 = body.CompanionAttachment
+	align.Attachment0 = attachment
 	align.Attachment1 = target
 	align.Responsiveness = 18
 	align.MaxForce = 1e6
 	align.Parent = body
 
 	local orient = Instance.new("AlignOrientation")
-	orient.Attachment0 = body.CompanionAttachment
+	orient.Attachment0 = attachment
 	orient.Attachment1 = target
 	orient.Responsiveness = 18
 	orient.MaxTorque = 1e6
 	orient.Parent = body
 
-	body.Parent = character
+	model.Parent = character
 	pcall(function()
 		body:SetNetworkOwner(player)
 	end)
@@ -194,7 +156,7 @@ local function onOpenEgg(player: Player, eggId: any, useFree: any)
 		paid = EconomyService.spendShards(player, egg.cost)
 	end
 	if not paid then
-		Net.get("Notify"):FireClient(player, "Не хватает осколков 💠", "error")
+		Net.get("Notify"):FireClient(player, "Не хватает осколков", "error")
 		return
 	end
 
@@ -227,7 +189,21 @@ function CompanionService.Init(services)
 	DataService = services.DataService
 	EconomyService = services.EconomyService
 
-	DataService.Loaded:Connect(function(player)
+	DataService.Loaded:Connect(function(player, data)
+		-- Перенос старых id питомцев (первая версия) на новые
+		for oldId, newId in CompanionConfig.Renamed do
+			local count = data.Companions[oldId]
+			if count then
+				data.Companions[newId] = (data.Companions[newId] or 0) + count
+				data.Companions[oldId] = nil
+			end
+			if data.Equipped == oldId then
+				data.Equipped = newId
+			end
+		end
+		if data.Equipped ~= "" and not CompanionConfig.Companions[data.Equipped] then
+			data.Equipped = ""
+		end
 		if player.Character then
 			attachCompanion(player)
 		end

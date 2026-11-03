@@ -232,7 +232,7 @@ function RoomKit:Keypad(side: string, pos: Vector3, link: string, group: string,
 		Color = Color3.fromRGB(30, 32, 40),
 		Attrs = { [Attr.CodeGroup] = group },
 	})
-	addSurfaceText(part, face, "⌨\nКОД", Colors[side])
+	addSurfaceText(part, face, "КОД", Colors[side])
 	return part
 end
 
@@ -274,7 +274,7 @@ function RoomKit:Pedestal(pos: Vector3, number: number): Part
 		Color = Color3.fromRGB(36, 38, 46),
 		Material = Enum.Material.Marble,
 	})
-	addSurfaceText(part, "Back", "№" .. number)
+	addSurfaceText(part, "Back", "#" .. number)
 	return part
 end
 

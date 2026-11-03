@@ -1,0 +1,8 @@
+{
+  "name": "two-sides-tools",
+  "private": true,
+  "description": "Скрипты для иконок и превью питомцев (не входят в игру)",
+  "dependencies": {
+    "three": "0.160.0"
+  }
+}

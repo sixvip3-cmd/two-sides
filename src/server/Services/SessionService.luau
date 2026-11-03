@@ -181,7 +181,7 @@ function Session:skipRoom(byPlayer: Player): boolean
 	if self.room:forceComplete() then
 		self:notify(
 			nil,
-			byPlayer.DisplayName .. " пропустил комнату для вас обоих ⏭",
+			byPlayer.DisplayName .. " пропустил комнату для вас обоих",
 			"success"
 		)
 		return true
@@ -195,14 +195,10 @@ function Session:onRoomCompleted()
 	end
 	EconomyService.onRoomCompleted(self, self.room ~= nil and self.room.skipped == true)
 	if self.roomIndex < #Rooms.list then
-		self:notify(nil, "Комната пройдена! ✨", "success")
+		self:notify(nil, "Комната пройдена!", "success")
 		self:loadRoom(self.roomIndex + 1)
 	else
-		self:notify(
-			nil,
-			"Глава пройдена! 🎉 Отличная командная работа",
-			"success"
-		)
+		self:notify(nil, "Глава пройдена! Отличная командная работа", "success")
 		EconomyService.onChapterCompleted(self)
 		SessionService.endSession(self, "completed")
 	end

@@ -119,18 +119,14 @@ local function onMark(room, group, player: Player, index: number, side: string)
 
 	local partner = room.session:getPartner(player)
 	if partner then
-		room.session:notify(
-			partner,
-			string.format("Напарник отметил предмет №%d", index),
-			"info"
-		)
+		room.session:notify(partner, string.format("Напарник отметил предмет #%d", index), "info")
 	end
 
 	local light, dark = group.marks[Side.Light], group.marks[Side.Dark]
 	if not light or not dark then
 		room.session:notify(
 			player,
-			string.format("Отмечен №%d. Теперь пусть отметит напарник", index),
+			string.format("Отмечен #%d. Теперь пусть отметит напарник", index),
 			"info"
 		)
 		return
@@ -195,7 +191,7 @@ return function(room, part: BasePart)
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Это отличие!"
-	prompt.ObjectText = "Предмет №" .. index
+	prompt.ObjectText = "Предмет #" .. index
 	prompt.HoldDuration = 0.3
 	prompt.MaxActivationDistance = 10
 	prompt.RequiresLineOfSight = false

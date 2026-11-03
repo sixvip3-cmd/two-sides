@@ -7,3 +7,4 @@ Packages/
 ServerPackages/
 roblox.yml
 .DS_Store
+node_modules/

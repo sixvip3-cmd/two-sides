@@ -310,7 +310,7 @@ local function onState(state)
 	sideBadge.BackgroundColor3 = Colors[state.side] or Colors.Light
 	sideLabel.Text = if isLight then "СВЕТЛЫЙ" else "ТЁМНЫЙ"
 	sideLabel.TextColor3 = ink
-	Ui.setIcon(sideIcon, if isLight then "sun" else "moon", ink)
+	Ui.setIcon(sideIcon, if isLight then "sun" else "moon", ink, sideBadge.BackgroundColor3)
 
 	hintLabel.Text = state.hint or ""
 	hintFrame.Visible = state.hint ~= nil and state.hint ~= ""

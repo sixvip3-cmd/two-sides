@@ -6,8 +6,8 @@
 	  2. Правый клик по загруженной картинке → Copy ID (или Copy Asset ID)
 	  3. Вставить число ниже: SHEET_ID = "rbxassetid://ЧИСЛО"
 
-	Пока SHEET_ID пустой, вместо картинок показываются символы-заглушки (FALLBACK),
-	игра работает и без загрузки.
+	Пока SHEET_ID пустой, иконки рисуются фигурами (Ui.luau) или простыми символами (FALLBACK) —
+	игра работает и без загрузки, но с атласом выглядит лучше.
 ]]
 
 local IconMap = require(script.Parent.IconMap)
@@ -16,25 +16,17 @@ local Icons = {}
 
 Icons.SHEET_ID = ""
 
+-- Символы для иконок, которые не рисуются фигурами (см. Ui.luau → DRAWN).
+-- Только латиница: в шрифтах Roblox нет значков вроде ✕ ✦ ⇄ — они превращаются в квадратики.
 Icons.FALLBACK = {
-	backspace = "⌫",
-	check = "✓",
-	close = "✕",
-	egg = "◐",
-	exit = "➜",
-	eye = "◉",
-	hint = "!",
+	backspace = "<",
+	exit = ">",
+	eye = "o",
 	info = "i",
 	keypad = "#",
-	lever = "⏻",
-	lock = "■",
-	moon = "☾",
-	partner = "◎",
-	shard = "◆",
-	skip = "»",
-	sparkle = "✦",
-	sun = "☀",
-	swap = "⇄",
+	lever = "/",
+	skip = ">>",
+	swap = "<>",
 	warning = "!",
 }
 

@@ -1,7 +1,7 @@
 --[[
 	ShopController — магазин, осколки и компаньоны на клиенте.
 
-	* Слева сверху: баланс осколков 💠.
+	* Слева сверху: баланс осколков.
 	* Слева: кнопка «Магазин».
 	* Справа (в комнате): кнопка «Пропустить комнату» — кредит пропуска или покупка.
 	* Окно магазина с вкладками: Яйца · Компаньоны · Осколки · Пассы.
@@ -79,13 +79,32 @@ local function makeCard(spec)
 		Parent = content,
 	})
 
-	Ui.icon(spec.icon, {
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0.06, 0),
-		Size = UDim2.fromScale(0.34, 0.3),
-		Color = spec.iconColor or WHITE,
+	Ui.new("UIGradient", {
+		Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(170, 172, 190)),
+		Rotation = 90,
 		Parent = card,
 	})
+
+	if spec.pet then
+		local viewport = Ui.petViewport(spec.pet, {
+			AnchorPoint = Vector2.new(0.5, 0),
+			Position = UDim2.new(0.5, 0, 0.01, 0),
+			Size = UDim2.fromScale(0.62, 0.4),
+			Parent = card,
+		})
+		if spec.silhouette then
+			viewport.ImageColor3 = Color3.new(0, 0, 0)
+			viewport.ImageTransparency = 0.25
+		end
+	else
+		Ui.icon(spec.icon, {
+			AnchorPoint = Vector2.new(0.5, 0),
+			Position = UDim2.new(0.5, 0, 0.06, 0),
+			Size = UDim2.fromScale(0.34, 0.3),
+			Color = spec.iconColor or WHITE,
+			Parent = card,
+		})
+	end
 
 	textLabel({
 		Position = UDim2.fromScale(0.06, 0.38),
@@ -158,11 +177,12 @@ function RENDER.Eggs()
 		local enough = inventory and inventory.shards >= egg.cost
 		makeCard({
 			order = order * 2,
+			pet = "Egg",
 			icon = "egg",
 			iconColor = Color3.fromRGB(255, 236, 200),
 			title = egg.name,
 			subtitle = "Шансы: " .. oddsText(egg.odds),
-			buttonText = string.format("Открыть · %d 💠", egg.cost),
+			buttonText = string.format("Открыть за %d", egg.cost),
 			buttonColor = if enough then ACCENT else Color3.fromRGB(90, 90, 104),
 			onClick = function()
 				Net.get("OpenEgg"):FireServer(eggId, false)
@@ -171,6 +191,7 @@ function RENDER.Eggs()
 		if inventory and inventory.freeEgg then
 			makeCard({
 				order = order * 2 + 1,
+				pet = "Egg",
 				icon = "egg",
 				iconColor = Color3.fromRGB(255, 214, 110),
 				accent = Color3.fromRGB(255, 214, 110),
@@ -197,12 +218,13 @@ function RENDER.Companions()
 			local isEquipped = equipped == id
 			makeCard({
 				order = order,
+				pet = id,
 				icon = "sparkle",
 				iconColor = def.color,
 				accent = rarity.color,
 				title = def.name,
 				titleColor = rarity.color,
-				subtitle = string.format("%s · ×%d", rarity.name, count),
+				subtitle = string.format("%s · x%d", rarity.name, count),
 				buttonText = if isEquipped then "Снять" else "Надеть",
 				buttonColor = if isEquipped then Color3.fromRGB(110, 110, 128) else GREEN,
 				onClick = function()
@@ -212,6 +234,8 @@ function RENDER.Companions()
 		else
 			makeCard({
 				order = order,
+				pet = id,
+				silhouette = true,
 				icon = "lock",
 				iconColor = Color3.fromRGB(90, 92, 108),
 				title = "???",
@@ -258,7 +282,7 @@ function RENDER.Passes()
 			iconColor = if key == "VIP" then Color3.fromRGB(255, 214, 110) else SHARD,
 			title = pass.title,
 			subtitle = pass.description,
-			buttonText = if owned then "Куплено ✓" else string.format("R$ %d", pass.price),
+			buttonText = if owned then "Куплено" else string.format("R$ %d", pass.price),
 			buttonColor = ROBUX,
 			disabled = owned,
 			onClick = function()
@@ -530,11 +554,11 @@ local function showResult(result)
 		TextColor3 = if result.isNew then Color3.fromRGB(255, 214, 110) else MUTED,
 		Parent = resultFrame,
 	})
-	Ui.icon("sparkle", {
+	Ui.petViewport(result.companion, {
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 56),
-		Size = UDim2.fromOffset(100, 100),
-		Color = def.color,
+		Position = UDim2.new(0.5, 0, 0, 44),
+		Size = UDim2.fromOffset(124, 124),
+		Spin = true,
 		Parent = resultFrame,
 	})
 	textLabel({
