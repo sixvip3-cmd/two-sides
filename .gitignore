@@ -1,0 +1,9 @@
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
+sourcemap.json
+Packages/
+ServerPackages/
+roblox.yml
+.DS_Store
