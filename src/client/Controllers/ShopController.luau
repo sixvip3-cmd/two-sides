@@ -188,15 +188,18 @@ function RENDER.Eggs()
 				Net.get("OpenEgg"):FireServer(eggId, false)
 			end,
 		})
-		if inventory and inventory.freeEgg then
+		local tokens = inventory and inventory.eggTokens or 0
+		if inventory and (tokens > 0 or inventory.freeEgg) then
 			makeCard({
 				order = order * 2 + 1,
 				pet = "Egg",
 				icon = "egg",
 				iconColor = Color3.fromRGB(255, 214, 110),
 				accent = Color3.fromRGB(255, 214, 110),
-				title = egg.name .. " (VIP)",
-				subtitle = "Бесплатное яйцо дня",
+				title = if tokens > 0 then string.format("%s x%d", egg.name, tokens) else egg.name .. " (VIP)",
+				subtitle = if tokens > 0
+					then "Награда сезонного пропуска"
+					else "Бесплатное яйцо дня",
 				buttonText = "Открыть бесплатно",
 				buttonColor = GREEN,
 				onClick = function()
@@ -239,7 +242,7 @@ function RENDER.Companions()
 				icon = "lock",
 				iconColor = Color3.fromRGB(90, 92, 108),
 				title = "???",
-				subtitle = rarity.name,
+				subtitle = if def.exclusive then def.exclusive else rarity.name,
 				buttonText = "Нет",
 				disabled = true,
 			})

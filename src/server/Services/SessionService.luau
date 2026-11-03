@@ -14,6 +14,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Constants = require(ReplicatedStorage.Shared.Constants)
 local Net = require(ReplicatedStorage.Shared.Net)
 
+local Analytics = require(script.Parent.Parent.Analytics)
 local RoomRuntime = require(script.Parent.Parent.Room.RoomRuntime)
 local Rooms = require(script.Parent.Parent.Rooms)
 
@@ -25,6 +26,9 @@ local SessionService = {}
 local CollisionService
 local WorldService
 local EconomyService
+local SeasonService
+local LeaderboardService
+local DataService
 
 local NotifyRemote: RemoteEvent
 local StateRemote: RemoteEvent
@@ -49,6 +53,10 @@ export type Session = typeof(setmetatable(
 		roomConnection: any,
 		ended: boolean,
 		solo: boolean,
+		mode: string,
+		rooms: { any },
+		startTime: number,
+		usedSkip: boolean,
 	},
 	Session
 ))
@@ -111,14 +119,15 @@ function Session:getPlayerOnSide(side: string): Player?
 end
 
 function Session:sendState()
-	local def = Rooms.list[self.roomIndex]
+	local def = self.rooms[self.roomIndex]
 	for member, side in self.players do
 		local partner = self:getPartner(member)
 		StateRemote:FireClient(member, {
 			side = side,
 			partnerName = partner and partner.DisplayName or "—",
 			roomIndex = self.roomIndex,
-			roomCount = #Rooms.list,
+			roomCount = #self.rooms,
+			mode = self.mode,
 			roomName = def and def.Name or "",
 			hint = def and def.Hints and def.Hints[side] or "",
 			solo = self.solo,
@@ -160,7 +169,7 @@ function Session:loadRoom(index: number)
 		self.room = nil
 	end
 
-	local def = Rooms.list[index]
+	local def = self.rooms[index]
 	self.roomIndex = index
 	self.room = RoomRuntime.new(self, def)
 	self.roomConnection = self.room.Completed:Connect(function()
@@ -179,6 +188,7 @@ function Session:skipRoom(byPlayer: Player): boolean
 		return false
 	end
 	if self.room:forceComplete() then
+		self.usedSkip = true
 		self:notify(
 			nil,
 			byPlayer.DisplayName .. " пропустил комнату для вас обоих",
@@ -189,17 +199,51 @@ function Session:skipRoom(byPlayer: Player): boolean
 	return false
 end
 
+-- Отличие найдено (вызывает механика Anomaly)
+function Session:onAnomalyFound()
+	SeasonService.onAnomalyFound(self)
+end
+
+-- Шаг воронки новичка — только для тех, кто ещё ничего не прошёл
+local function onboardingStep(player: Player, step: number, name: string, condition: (any) -> boolean)
+	local data = DataService.getData(player)
+	if data and condition(data) then
+		Analytics.onboarding(player, step, name)
+	end
+end
+
 function Session:onRoomCompleted()
 	if self.ended then
 		return
 	end
-	EconomyService.onRoomCompleted(self, self.room ~= nil and self.room.skipped == true)
-	if self.roomIndex < #Rooms.list then
+	local skipped = self.room ~= nil and self.room.skipped == true
+	for player in self.players do
+		onboardingStep(player, 4, "FirstRoomCompleted", function(data)
+			return data.RoomsCompleted == 0
+		end)
+		if self.mode == "chapter" then
+			Analytics.funnel(player, "Chapter1", self.id, self.roomIndex, self.rooms[self.roomIndex].Id)
+		end
+	end
+	EconomyService.onRoomCompleted(self, skipped)
+	SeasonService.onRoomCompleted(self, skipped)
+
+	if self.roomIndex < #self.rooms then
 		self:notify(nil, "Комната пройдена!", "success")
 		self:loadRoom(self.roomIndex + 1)
+	elseif self.mode == "daily" then
+		SeasonService.onDailyCompleted(self)
+		SessionService.endSession(self, "completed")
 	else
 		self:notify(nil, "Глава пройдена! Отличная командная работа", "success")
+		for player in self.players do
+			onboardingStep(player, 5, "FirstChapterCompleted", function(data)
+				return data.ChaptersCompleted == 0
+			end)
+		end
+		LeaderboardService.onChapterCompleted(self)
 		EconomyService.onChapterCompleted(self)
+		SeasonService.onChapterCompleted(self)
 		SessionService.endSession(self, "completed")
 	end
 end
@@ -216,9 +260,14 @@ function SessionService.getSession(player: Player): Session?
 	return sessionByPlayer[player]
 end
 
--- pair — два игрока; с opts.solo = true — один (тест в Studio, позже соло-режим).
-function SessionService.create(pair: { Player }, opts: { solo: boolean? }?): Session?
+--[[
+	pair — два игрока; opts.solo = true — один (тест в Studio, позже соло-режим);
+	opts.mode = "daily" — только комната дня (награда раз в день), иначе вся глава.
+]]
+function SessionService.create(pair: { Player }, opts: { solo: boolean?, mode: string? }?): Session?
 	local solo = opts ~= nil and opts.solo == true
+	local mode = if opts ~= nil and opts.mode == "daily" then "daily" else "chapter"
+	local rooms = if mode == "daily" then { Rooms.list[SeasonService.dailyRoomIndex()] } else Rooms.list
 	local needed = if solo then 1 else 2
 	if #pair < needed then
 		return nil
@@ -254,6 +303,10 @@ function SessionService.create(pair: { Player }, opts: { solo: boolean? }?): Ses
 		folder = folder,
 		players = players,
 		solo = solo,
+		mode = mode,
+		rooms = rooms,
+		startTime = os.clock(),
+		usedSkip = false,
 		roomIndex = 0,
 		room = nil,
 		roomConnection = nil,
@@ -268,6 +321,12 @@ function SessionService.create(pair: { Player }, opts: { solo: boolean? }?): Ses
 	end
 
 	EconomyService.onSessionStarted(session)
+	SeasonService.onSessionStarted(session)
+	for member in session.players do
+		onboardingStep(member, 3, "FirstSession", function(data)
+			return data.RoomsCompleted == 0
+		end)
+	end
 	session:loadRoom(1)
 	for member, side in session.players do
 		local text = if solo
@@ -323,6 +382,9 @@ function SessionService.Init(services)
 	CollisionService = services.CollisionService
 	WorldService = services.WorldService
 	EconomyService = services.EconomyService
+	SeasonService = services.SeasonService
+	LeaderboardService = services.LeaderboardService
+	DataService = services.DataService
 
 	NotifyRemote = Net.get("Notify")
 	StateRemote = Net.get("SessionState")

@@ -32,6 +32,13 @@ Config.Companions = {
 	Unicorn = { name = "Единорог", rarity = "Epic", color = RGB(199, 164, 255) },
 	Dragon = { name = "Дракончик", rarity = "Epic", color = RGB(123, 92, 255) },
 	Phoenix = { name = "Феникс", rarity = "Legendary", color = RGB(255, 138, 42) },
+	-- exclusive: не выпадает из яиц, только награда (сезонный пропуск)
+	MoonFox = {
+		name = "Лунный лис",
+		rarity = "Epic",
+		color = RGB(127, 160, 255),
+		exclusive = "Сезонный пропуск",
+	},
 }
 
 -- Порядок в инвентаре
@@ -48,6 +55,7 @@ Config.CompanionOrder = {
 	"Unicorn",
 	"Dragon",
 	"Phoenix",
+	"MoonFox",
 }
 
 -- Старые id из первой версии → новые (переносятся при загрузке сохранения)

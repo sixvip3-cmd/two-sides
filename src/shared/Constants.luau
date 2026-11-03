@@ -32,6 +32,7 @@ Constants.Attr = {
 	PadTitle = "PadTitle",
 	PadSolo = "PadSolo", -- площадка «Тест одному» (только в Studio)
 	PadRandom = "PadRandom", -- площадка случайного подбора (сюда отправляем, если напарник ушёл)
+	PadMode = "PadMode", -- "daily" — площадка ежедневной комнаты
 }
 
 -- Цвета миров (используются конструктором комнат и интерфейсом).
@@ -63,6 +64,11 @@ Constants.Remotes = {
 	"OpenEgg", -- client → server: (eggId: string, useFree: boolean?)
 	"EggResult", -- server → client: ({ companion: string, isNew: boolean })
 	"EquipCompanion", -- client → server: (companionId: string) — "" снять
+	"SeasonState", -- server → client: (state: table) — пропуск, задания, серия
+	"RequestSeason", -- client → server: ()
+	"DailyReward", -- server → client: ({ streak, amount }) — награда за вход
+	"TutorialDone", -- client → server: () — новичок закрыл обучение
+	"ShowTutorial", -- server → client: () — показать окно «Как играть»
 }
 
 return Constants

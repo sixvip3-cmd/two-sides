@@ -19,6 +19,7 @@ local CompanionService = {}
 
 local DataService
 local EconomyService
+local SeasonService
 
 local EGG_COOLDOWN = 0.8
 local FOLLOW_OFFSET = Vector3.new(2.4, 1.6, 1.8)
@@ -32,9 +33,11 @@ local random = Random.new()
 
 local byRarity: { [string]: { string } } = {}
 for _, id in CompanionConfig.CompanionOrder do
-	local rarity = CompanionConfig.Companions[id].rarity
-	byRarity[rarity] = byRarity[rarity] or {}
-	table.insert(byRarity[rarity], id)
+	local def = CompanionConfig.Companions[id]
+	if not def.exclusive then -- эксклюзивы (награды пропуска) из яиц не выпадают
+		byRarity[def.rarity] = byRarity[def.rarity] or {}
+		table.insert(byRarity[def.rarity], id)
+	end
 end
 
 local function rollRarity(odds: { [string]: number }): string
@@ -148,12 +151,18 @@ local function onOpenEgg(player: Player, eggId: any, useFree: any)
 	end
 	lastEggOpen[player] = now
 
+	-- Бесплатно: сначала жетон яйца (награда пропуска), потом ежедневное яйцо VIP
 	local paid = false
 	if useFree == true then
-		paid = EconomyService.useFreeEgg(player)
+		if data.EggTokens > 0 then
+			data.EggTokens -= 1
+			paid = true
+		else
+			paid = EconomyService.useFreeEgg(player)
+		end
 	end
 	if not paid then
-		paid = EconomyService.spendShards(player, egg.cost)
+		paid = EconomyService.spendShards(player, egg.cost, "Egg_" .. eggId)
 	end
 	if not paid then
 		Net.get("Notify"):FireClient(player, "Не хватает осколков", "error")
@@ -168,6 +177,21 @@ local function onOpenEgg(player: Player, eggId: any, useFree: any)
 		attachCompanion(player)
 	end
 
+	Net.get("EggResult"):FireClient(player, { companion = companionId, isNew = isNew })
+	EconomyService.sendInventory(player)
+	if SeasonService then
+		SeasonService.progress(player, "eggs", 1)
+	end
+end
+
+-- Выдать питомца в награду (сезонный пропуск и т.п.)
+function CompanionService.grant(player: Player, companionId: string)
+	local data = DataService.getData(player)
+	if not data or not CompanionConfig.Companions[companionId] then
+		return
+	end
+	local isNew = (data.Companions[companionId] or 0) == 0
+	data.Companions[companionId] = (data.Companions[companionId] or 0) + 1
 	Net.get("EggResult"):FireClient(player, { companion = companionId, isNew = isNew })
 	EconomyService.sendInventory(player)
 end
@@ -188,6 +212,7 @@ end
 function CompanionService.Init(services)
 	DataService = services.DataService
 	EconomyService = services.EconomyService
+	SeasonService = services.SeasonService
 
 	DataService.Loaded:Connect(function(player, data)
 		-- Перенос старых id питомцев (первая версия) на новые

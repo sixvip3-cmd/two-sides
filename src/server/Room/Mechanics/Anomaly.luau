@@ -146,6 +146,7 @@ local function onMark(room, group, player: Player, index: number, side: string)
 			markBox.SurfaceColor3 = Colors.Success
 		end
 		room:setSource(group.link, group.token, true)
+		room.session:onAnomalyFound()
 		room.session:notify(nil, "Нашли отличие! Проход открыт", "success")
 	else
 		group.checking = true

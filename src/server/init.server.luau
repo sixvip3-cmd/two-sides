@@ -14,6 +14,9 @@ local ORDER = {
 	"DataService",
 	"EconomyService",
 	"CompanionService",
+	"SeasonService",
+	"LeaderboardService",
+	"TutorialService",
 	"SessionService",
 	"LobbyService",
 }

@@ -30,6 +30,17 @@ local TEMPLATE = {
 	RecentPartners = {}, -- массив UserId последних напарников
 	PurchaseIds = {}, -- массив PurchaseId обработанных покупок (защита от двойного начисления)
 	LastFreeEggDay = 0, -- для VIP: номер дня последнего бесплатного яйца
+	EggTokens = 0, -- бесплатные яйца (награды пропуска)
+
+	-- Сезонный пропуск (сбрасывается, когда меняется Id сезона)
+	Season = { Id = "", XP = 0, Premium = false, ClaimedFree = 0, ClaimedPremium = 0 },
+	-- Еженедельные задания (сбрасываются в понедельник)
+	Quests = { Week = 0, Progress = {}, Done = {}, Partners = {} },
+	-- Серия ежедневных входов
+	Login = { LastDay = 0, Streak = 0 },
+	DailyRoomDay = 0, -- день, когда последний раз получена награда за ежедневную комнату
+	BestChapterTime = 0, -- лучшее время прохождения главы (сек), 0 — нет
+	TutorialDone = false,
 }
 
 local STORE_NAME = "PlayerData_v1"

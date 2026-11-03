@@ -111,7 +111,7 @@ local function updatePad(pad: PadState, now: number)
 			pad.countdownEnd = nil
 			pad.countdownPair = nil
 			pad.cooldownUntil = now + Config.PAD_COOLDOWN
-			SessionService.create({ first, second })
+			SessionService.create({ first, second }, { mode = pad.mode })
 			setLabel(pad, pad.title)
 		else
 			setLabel(
@@ -139,6 +139,7 @@ function LobbyService.Init(services)
 			part = part,
 			title = part:GetAttribute(Constants.Attr.PadTitle),
 			solo = part:GetAttribute(Constants.Attr.PadSolo) == true,
+			mode = part:GetAttribute(Constants.Attr.PadMode),
 			occupants = {},
 			countdownEnd = nil,
 			countdownPair = nil,

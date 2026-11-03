@@ -7,7 +7,10 @@ local ORDER = {
 	"HudController",
 	"KeypadController",
 	"ShopController",
+	"SeasonController",
+	"TutorialController",
 	"ChatTagController",
+	"DeviceController",
 }
 
 local controllers = {}

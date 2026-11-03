@@ -19,6 +19,8 @@ local RunService = game:GetService("RunService")
 local EconomyConfig = require(ReplicatedStorage.Shared.EconomyConfig)
 local Net = require(ReplicatedStorage.Shared.Net)
 
+local Analytics = require(script.Parent.Parent.Analytics)
+
 local EconomyService = {}
 
 local DataService
@@ -33,6 +35,9 @@ local Products = EconomyConfig.Products
 local GamePasses = EconomyConfig.GamePasses
 
 local ownedPasses: { [Player]: { [string]: boolean } } = {}
+local GRANTS: { [string]: (Player) -> () } = {}
+-- Проверка ДО показа окна покупки: (player) -> (можно?, сообщение)
+local PURCHASE_CHECKS: { [string]: (Player) -> (boolean, string?) } = {}
 local shardPacksAllowed: { [Player]: boolean } = {}
 local productKeyById: { [number]: string } = {}
 local passKeyById: { [number]: string } = {}
@@ -93,14 +98,22 @@ function EconomyService.sendInventory(player: Player)
 		companions = data.Companions,
 		equipped = data.Equipped,
 		skipCredits = data.SkipCredits,
+		eggTokens = data.EggTokens,
 		passes = passes,
 		shardPacksAllowed = shardPacksAllowed[player] == true,
 		freeEgg = EconomyService.isFreeEggAvailable(player),
 	})
 end
 
--- earned = true — заработано в игре (идёт в статистику), false — куплено
-function EconomyService.addShards(player: Player, amount: number, earned: boolean?): boolean
+-- earned = true — заработано в игре (идёт в статистику), false — куплено.
+-- transactionType/sku — для аналитики (Gameplay, IAP, TimedReward…).
+function EconomyService.addShards(
+	player: Player,
+	amount: number,
+	earned: boolean?,
+	transactionType: string?,
+	sku: string?
+): boolean
 	local data = DataService.getData(player)
 	if not data or amount <= 0 then
 		return false
@@ -111,10 +124,18 @@ function EconomyService.addShards(player: Player, amount: number, earned: boolea
 	end
 	updateBalanceDisplay(player, data)
 	EconomyService.sendInventory(player)
+	Analytics.economy(
+		player,
+		"Source",
+		amount,
+		data.Shards,
+		transactionType or (if earned then "Gameplay" else "IAP"),
+		sku
+	)
 	return true
 end
 
-function EconomyService.spendShards(player: Player, amount: number): boolean
+function EconomyService.spendShards(player: Player, amount: number, sku: string?): boolean
 	local data = DataService.getData(player)
 	if not data or amount < 0 or data.Shards < amount then
 		return false
@@ -122,7 +143,15 @@ function EconomyService.spendShards(player: Player, amount: number): boolean
 	data.Shards -= amount
 	updateBalanceDisplay(player, data)
 	EconomyService.sendInventory(player)
+	Analytics.economy(player, "Sink", amount, data.Shards, "Shop", sku)
 	return true
+end
+
+-- Другие сервисы (например, сезонный пропуск) регистрируют выдачу своих товаров
+-- и, при желании, проверку «можно ли сейчас купить».
+function EconomyService.registerGrant(key: string, grant: (Player) -> (), check: ((Player) -> (boolean, string?))?)
+	GRANTS[key] = grant
+	PURCHASE_CHECKS[key] = check
 end
 
 --------------------------------------------------------------------------------
@@ -214,8 +243,6 @@ end
 -- Выдача товаров
 --------------------------------------------------------------------------------
 
-local GRANTS: { [string]: (Player) -> () } = {}
-
 GRANTS.SkipRoom = function(player)
 	local data = DataService.getData(player)
 	data.SkipCredits += 1
@@ -232,7 +259,7 @@ end
 for _, key in EconomyConfig.ShardPackOrder do
 	GRANTS[key] = function(player)
 		local amount = Products[key].shards
-		EconomyService.addShards(player, amount, false)
+		EconomyService.addShards(player, amount, false, "IAP", key)
 		notify(player, string.format("+%d осколков — спасибо за покупку!", amount), "success")
 	end
 end
@@ -277,6 +304,7 @@ local function processReceipt(receipt)
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 
+	Analytics.custom(player, "Purchase_" .. key, receipt.CurrencySpent)
 	table.insert(data.PurchaseIds, receipt.PurchaseId)
 	while #data.PurchaseIds > MAX_PURCHASE_IDS do
 		table.remove(data.PurchaseIds, 1)
@@ -312,6 +340,14 @@ local function onPurchaseRequest(player: Player, key: any)
 
 	local product = Products[key]
 	if product then
+		local check = PURCHASE_CHECKS[key]
+		if check then
+			local allowed, message = check(player)
+			if not allowed then
+				notify(player, message or "Сейчас это купить нельзя", "error")
+				return
+			end
+		end
 		if string.sub(key, 1, 6) == "Shards" and not shardPacksAllowed[player] then
 			notify(player, "Наборы осколков недоступны в твоём регионе", "error")
 			return

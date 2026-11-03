@@ -106,6 +106,59 @@ local function buildDefaultLobby(folder: Folder)
 	randomPad:SetAttribute(Attr.PadRandom, true)
 	addBillboard(randomPad, "Случайный напарник")
 
+	-- Ежедневная комната: одна комната дня, награда раз в день
+	local dailyPad = makePart({
+		Name = "DailyPad",
+		Size = Vector3.new(12, 0.6, 12),
+		Position = Vector3.new(-30, 0.3, 30),
+		Color = Color3.fromRGB(255, 214, 110),
+		Material = Enum.Material.Neon,
+		Parent = folder,
+	})
+	dailyPad:SetAttribute(Attr.PadTitle, "Ежедневная комната")
+	dailyPad:SetAttribute(Attr.PadMode, "daily")
+	addBillboard(dailyPad, "Ежедневная комната")
+
+	-- Доска рекордов пар
+	local board = makePart({
+		Name = "LeaderboardBoard",
+		Size = Vector3.new(1, 16, 26),
+		Position = Vector3.new(62, 8, 0),
+		Color = Color3.fromRGB(25, 25, 32),
+		Parent = folder,
+	})
+	local boardGui = Instance.new("SurfaceGui")
+	boardGui.Name = "Board"
+	boardGui.Face = Enum.NormalId.Left
+	boardGui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	boardGui.PixelsPerStud = 30
+	boardGui.LightInfluence = 0
+	local list = Instance.new("Frame")
+	list.Name = "List"
+	list.Size = UDim2.fromScale(1, 1)
+	list.BackgroundTransparency = 1
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 6)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = list
+	local padding = Instance.new("UIPadding")
+	padding.PaddingLeft = UDim.new(0, 20)
+	padding.PaddingTop = UDim.new(0, 16)
+	padding.PaddingRight = UDim.new(0, 20)
+	padding.Parent = list
+	local header = Instance.new("TextLabel")
+	header.Name = "Header"
+	header.LayoutOrder = 0
+	header.Size = UDim2.new(1, 0, 0, 56)
+	header.BackgroundTransparency = 1
+	header.Font = Enum.Font.GothamBlack
+	header.TextScaled = true
+	header.TextColor3 = Color3.fromRGB(255, 214, 110)
+	header.Text = "РЕКОРДЫ ПАР — ГЛАВА 1"
+	header.Parent = list
+	list.Parent = boardGui
+	boardGui.Parent = board
+
 	-- Площадка для разработчика: пройти комнаты одному, переключая миры клавишей T
 	if RunService:IsStudio() then
 		local soloPad = makePart({
@@ -176,6 +229,38 @@ function WorldService.getPads(): { BasePart }
 		end
 	end
 	return pads
+end
+
+function WorldService.getLeaderboardBoard(): BasePart?
+	local board = lobbyFolder:FindFirstChild("LeaderboardBoard", true)
+	return if board and board:IsA("BasePart") then board else nil
+end
+
+-- Строки доски рекордов (заголовок остаётся)
+function WorldService.setLeaderboardRows(rows: { string })
+	local board = WorldService.getLeaderboardBoard()
+	local list = board and board:FindFirstChild("Board") and board.Board:FindFirstChild("List")
+	if not list then
+		return
+	end
+	for _, child in list:GetChildren() do
+		if child:IsA("TextLabel") and child.Name == "Row" then
+			child:Destroy()
+		end
+	end
+	for index, text in rows do
+		local row = Instance.new("TextLabel")
+		row.Name = "Row"
+		row.LayoutOrder = index
+		row.Size = UDim2.new(1, 0, 0, 36)
+		row.BackgroundTransparency = 1
+		row.Font = Enum.Font.GothamBold
+		row.TextScaled = true
+		row.TextXAlignment = Enum.TextXAlignment.Left
+		row.TextColor3 = Color3.new(1, 1, 1)
+		row.Text = text
+		row.Parent = list
+	end
 end
 
 function WorldService.getSessionsFolder(): Folder

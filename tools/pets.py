@@ -542,6 +542,32 @@ def phoenix(p):
             p.ell([0.07, 0.16, 0.07], [s * 0.25 + dx, 0.12, -0.15], "#E0A23A")
 
 
+@pet("MoonFox", glow="#9FC4FF", sparkles=True)
+def moon_fox(p):
+    """Эксклюзив сезонного пропуска «Глава 1»: тёмно-синий лис со звёздами."""
+    navy, star, light = "#2C3A7A", "#FFE08A", "#AFC8FF"
+    head, body = classic_body(p, navy, light, paw="#1E2858", head_size=(1.6, 1.35, 1.35))
+    for s in (-1, 1):
+        p.triangle([s * 0.48, 2.05, 0.02], 0.55, 0.7, 0.14, navy, tilt_z=-s * 16)
+        p.triangle([s * 0.47, 2.0, -0.06], 0.3, 0.38, 0.04, "#6F86E8", tilt_z=-s * 16)
+        p.triangle([s * 0.58, 2.29, -0.03], 0.22, 0.24, 0.16, star, tilt_z=-s * 16, material="Neon")
+        p.patch(head, s * 66, -16, [0.42, 0.3, 0.3], light, lift=-0.06, spin=-s * 20)
+    p.patch(head, 0, -22, [0.74, 0.42, 0.26], light, lift=-0.05)
+    p.eyes(head, yaw=22, pitch=12, size=0.29, iris="#7FE3FF")
+    p.patch(head, 0, -11, [0.2, 0.14, 0.1], "#141A3A", lift=0.08)
+    p.mouth_w(head, pitch=-21, lift=0.08, color="#141A3A")
+    p.blush(head, yaw=38, pitch=-6, color="#9FB6FF")
+    # месяц на лбу и звёзды на теле
+    p.patch(head, 0, 44, [0.28, 0.28, 0.06], star, material="Neon")
+    p.patch(head, 6, 48, [0.24, 0.24, 0.07], navy, lift=0.01)
+    for (yaw, pitch) in ((150, 30), (-140, 10), (175, -10), (120, -20)):
+        p.patch(body, yaw, pitch, [0.1, 0.1, 0.05], star, material="Neon")
+    p.ell([0.5, 0.5, 1.15], [0.2, 0.8, 0.95], navy, rot(x=-38, y=18))
+    p.ell([0.44, 0.44, 0.44], [0.36, 1.25, 1.35], star, material="Neon")
+    for t in (0.3, 0.55):
+        p.ell([0.08, 0.08, 0.08], [0.2 + t * 0.2, 0.8 + t * 0.5, 0.95 + t * 0.45], star, material="Neon")
+
+
 def egg_spec():
     p = Pet()
     egg = Surface([0, 1.05, 0], [1.7, 2.1, 1.7])

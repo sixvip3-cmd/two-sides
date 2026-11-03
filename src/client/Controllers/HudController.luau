@@ -324,7 +324,8 @@ function HudController.Start()
 	end)
 
 	UserInputService.InputBegan:Connect(function(input, processed)
-		if not processed and isSolo and input.KeyCode == Enum.KeyCode.T then
+		local isSwitchKey = input.KeyCode == Enum.KeyCode.T or input.KeyCode == Enum.KeyCode.ButtonY
+		if not processed and isSolo and isSwitchKey then
 			Net.get("SwitchSide"):FireServer()
 		end
 	end)

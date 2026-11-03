@@ -28,6 +28,10 @@ return {
 		Shards5500 = { id = 0, price = 199, shards = 5500, title = "5 500 осколков", bonus = "+10%" },
 		Shards15000 = { id = 0, price = 449, shards = 15000, title = "15 000 осколков", bonus = "+25%" },
 		Shards40000 = { id = 0, price = 999, shards = 40000, title = "40 000 осколков", bonus = "+50%" },
+		-- Сезонный пропуск (на каждый сезон покупается заново, поэтому это товар, а не пасс)
+		SeasonPremium = { id = 0, price = 399, title = "Премиум-пропуск" },
+		SeasonPremiumPlus = { id = 0, price = 799, title = "Премиум+ (сразу +10 уровней)" },
+		SeasonLevel = { id = 0, price = 49, title = "+1 уровень пропуска" },
 	},
 
 	-- Порядок наборов осколков в магазине
