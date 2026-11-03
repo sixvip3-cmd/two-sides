@@ -31,6 +31,8 @@ local HANDLERS = {
 	MirrorBox = require(Mechanics.MirrorBox),
 	Keypad = require(Mechanics.Keypad),
 	CodeDigit = require(Mechanics.CodeDigit),
+	Mover = require(Mechanics.Mover),
+	AnomalyItem = require(Mechanics.Anomaly),
 }
 
 local RoomRuntime = {}
@@ -81,6 +83,8 @@ function RoomRuntime.new(session, def)
 	self.lastRespawnNotify = {}
 	self.lastCodeSubmit = {}
 	self.heartbeatCallbacks = {}
+	self.wiredCallbacks = {}
+	self.anomalyGroups = {}
 	self.connections = {}
 
 	local model = Instance.new("Model")
@@ -143,6 +147,15 @@ function RoomRuntime:_wire()
 			end
 		end
 	end
+
+	for _, callback in self.wiredCallbacks do
+		callback()
+	end
+end
+
+-- Колбэк после подключения всех механик комнаты (нужен механикам из нескольких деталей).
+function RoomRuntime:onWired(callback: () -> ())
+	table.insert(self.wiredCallbacks, callback)
 end
 
 --------------------------------------------------------------------------------

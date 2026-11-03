@@ -1,0 +1,65 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  body{margin:0;background:#000;font-family:Inter}
+  .art{position:relative;overflow:hidden}
+  .light{position:absolute;inset:0;background:radial-gradient(circle at 25% 25%,#fff2c4 0%,#ffcf6e 35%,#ff9a3c 100%)}
+  .dark{position:absolute;inset:0;background:radial-gradient(circle at 75% 75%,#8d63ff 0%,#4b26b8 45%,#170b3d 100%)}
+  .seam{position:absolute;background:#fff;box-shadow:0 0 30px 12px rgba(255,255,255,.75)}
+  /* блочный персонаж */
+  .fig{position:absolute}
+  .fig div{position:absolute;border-radius:6%}
+  .solid div{background:#1b1430}
+  .ghost div{background:rgba(220,205,255,.28);border:5px solid rgba(235,225,255,.95);box-shadow:0 0 24px rgba(200,180,255,.9)}
+  .title{position:absolute;left:0;right:0;text-align:center;font-weight:900;color:#fff;letter-spacing:.02em;
+         -webkit-text-stroke:0 #000;text-shadow:0 6px 0 #1b1430,0 0 26px rgba(0,0,0,.55)}
+  .sub{position:absolute;left:0;right:0;text-align:center;font-weight:800;color:#fff;text-shadow:0 4px 0 #1b1430}
+  .pill{display:inline-block;background:#1b1430;color:#fff;border-radius:999px;padding:.25em .9em}
+</style></head><body>
+
+<!-- ИКОНКА 512 -->
+<div class="art" id="icon" style="width:512px;height:512px">
+  <div class="light" style="clip-path:polygon(0 0,100% 0,0 100%)"></div>
+  <div class="dark" style="clip-path:polygon(100% 0,100% 100%,0 100%)"></div>
+  <div class="seam" style="width:12px;height:760px;left:250px;top:-124px;transform:rotate(45deg)"></div>
+  <!-- светлый персонаж (слева сверху) -->
+  <div class="fig solid" style="left:70px;top:70px;width:150px;height:250px">
+    <div style="left:38px;top:0;width:74px;height:74px"></div>
+    <div style="left:22px;top:80px;width:106px;height:96px"></div>
+    <div style="left:22px;top:182px;width:48px;height:68px"></div>
+    <div style="left:80px;top:182px;width:48px;height:68px"></div>
+  </div>
+  <!-- тёмный персонаж-призрак (справа снизу), зеркально -->
+  <div class="fig ghost" style="left:292px;top:150px;width:150px;height:250px">
+    <div style="left:38px;top:0;width:74px;height:74px"></div>
+    <div style="left:22px;top:80px;width:106px;height:96px"></div>
+    <div style="left:22px;top:182px;width:48px;height:68px"></div>
+    <div style="left:80px;top:182px;width:48px;height:68px"></div>
+  </div>
+  <div class="title" style="bottom:22px;font-size:76px;line-height:1">TWO SIDES</div>
+</div>
+
+<!-- ПРЕВЬЮ 1920×1080 -->
+<div class="art" id="thumbnail" style="width:1920px;height:1080px">
+  <div class="light" style="clip-path:polygon(0 0,56% 0,44% 100%,0 100%)"></div>
+  <div class="dark" style="clip-path:polygon(56% 0,100% 0,100% 100%,44% 100%)"></div>
+  <div class="seam" style="width:16px;height:1400px;left:952px;top:-160px;transform:rotate(6.3deg)"></div>
+  <svg style="position:absolute;left:110px;top:430px;width:160px;height:160px" viewBox="0 0 100 100"><g fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"><circle cx="50" cy="50" r="19" fill="#fff" stroke="none"/><line x1="50" y1="8" x2="50" y2="18"/><line x1="50" y1="82" x2="50" y2="92"/><line x1="8" y1="50" x2="18" y2="50"/><line x1="82" y1="50" x2="92" y2="50"/><line x1="20.3" y1="20.3" x2="27.4" y2="27.4"/><line x1="72.6" y1="72.6" x2="79.7" y2="79.7"/><line x1="20.3" y1="79.7" x2="27.4" y2="72.6"/><line x1="72.6" y1="27.4" x2="79.7" y2="20.3"/></g></svg>
+  <svg style="position:absolute;right:110px;top:430px;width:160px;height:160px" viewBox="0 0 100 100"><path fill="#fff" d="M58 10 A40 40 0 1 0 90 62 A31 31 0 0 1 58 10 Z"/><path fill="#fff" d="M74 18 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 z"/></svg>
+  <div class="fig solid" style="left:300px;top:500px;width:300px;height:500px;transform:scale(.9);transform-origin:top center">
+    <div style="left:76px;top:0;width:148px;height:148px"></div>
+    <div style="left:44px;top:160px;width:212px;height:192px"></div>
+    <div style="left:44px;top:364px;width:96px;height:136px"></div>
+    <div style="left:160px;top:364px;width:96px;height:136px"></div>
+  </div>
+  <div class="fig ghost" style="left:1320px;top:500px;width:300px;height:500px;transform:scale(.9);transform-origin:top center">
+    <div style="left:76px;top:0;width:148px;height:148px"></div>
+    <div style="left:44px;top:160px;width:212px;height:192px"></div>
+    <div style="left:44px;top:364px;width:96px;height:136px"></div>
+    <div style="left:160px;top:364px;width:96px;height:136px"></div>
+  </div>
+  <div class="title" style="top:70px;font-size:190px;line-height:1">TWO SIDES</div>
+  <div class="sub" style="top:290px;font-size:64px"><span class="pill">2 PLAYER CO-OP ESCAPE</span></div>
+</div>
+
+</body></html>

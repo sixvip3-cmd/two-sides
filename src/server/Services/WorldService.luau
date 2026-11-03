@@ -103,6 +103,7 @@ local function buildDefaultLobby(folder: Folder)
 		Parent = folder,
 	})
 	randomPad:SetAttribute(Attr.PadTitle, "Случайный напарник")
+	randomPad:SetAttribute(Attr.PadRandom, true)
 	addBillboard(randomPad, "Случайный напарник")
 
 	-- Площадка для разработчика: пройти комнаты одному, переключая миры клавишей T
@@ -179,6 +180,18 @@ end
 
 function WorldService.getSessionsFolder(): Folder
 	return sessionsFolder
+end
+
+-- Точка на площадке случайного подбора (или обычное лобби, если такой площадки нет).
+function WorldService.getRandomPadCFrame(): CFrame
+	for _, pad in WorldService.getPads() do
+		if pad:GetAttribute(Attr.PadRandom) then
+			local offset =
+				Vector3.new((math.random() - 0.5) * pad.Size.X * 0.6, 4, (math.random() - 0.5) * pad.Size.Z * 0.6)
+			return pad.CFrame + offset
+		end
+	end
+	return WorldService.getLobbyCFrame()
 end
 
 function WorldService.getLobbyCFrame(): CFrame

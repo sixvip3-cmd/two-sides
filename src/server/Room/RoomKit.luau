@@ -251,6 +251,62 @@ function RoomKit:CodeDigit(side: string, pos: Vector3, group: string, index: num
 	return part
 end
 
+-- Лифт / сдвижная стена: пока связь активна, деталь сдвинута на offset.
+function RoomKit:Mover(side: string, pos: Vector3, size: Vector3, link: string, offset: Vector3, time: number?): Part
+	return self:Part({
+		Name = "Mover",
+		Size = size,
+		Pos = pos,
+		Side = side,
+		Mech = "Mover",
+		Link = link,
+		Material = Enum.Material.DiamondPlate,
+		Attrs = { MoveOffset = offset, MoveTime = time or 2 },
+	})
+end
+
+-- Постамент с номером на передней грани (+Z, к точке появления).
+function RoomKit:Pedestal(pos: Vector3, number: number): Part
+	local part = self:Part({
+		Name = "Pedestal" .. number,
+		Size = Vector3.new(4, 3, 4),
+		Pos = pos + Vector3.new(0, 1.5, 0),
+		Color = Color3.fromRGB(36, 38, 46),
+		Material = Enum.Material.Marble,
+	})
+	addSurfaceText(part, "Back", "№" .. number)
+	return part
+end
+
+--[[
+	Предмет для «найди отличие»: создаёт ДВЕ одинаковые детали — в светлом и тёмном мире.
+	pos — точка на верху постамента (низ предмета).
+]]
+function RoomKit:AnomalyItem(
+	group: string,
+	index: number,
+	pos: Vector3,
+	size: Vector3,
+	color: Color3,
+	shape: Enum.PartType,
+	link: string
+)
+	for _, side in { Side.Light, Side.Dark } do
+		local part = self:Part({
+			Name = "AnomalyItem" .. index .. side,
+			Size = size,
+			Pos = pos + Vector3.new(0, size.Y / 2, 0),
+			Side = side,
+			Mech = "AnomalyItem",
+			Link = link,
+			Color = color,
+			Material = Enum.Material.SmoothPlastic,
+			Attrs = { AnomalyGroup = group, AnomalyIndex = index },
+		})
+		part.Shape = shape
+	end
+end
+
 function RoomKit:Spawn(side: string, pos: Vector3): Part
 	return self:Part({
 		Name = "Spawn" .. side,

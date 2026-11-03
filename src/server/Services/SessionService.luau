@@ -287,14 +287,17 @@ function SessionService.endSession(session: Session, reason: string)
 			if member.Character then
 				CollisionService.setCharacterSide(member.Character, nil)
 			end
-			teleport(member, WorldService.getLobbyCFrame())
 			StateRemote:FireClient(member, nil)
 			if reason == "partner_left" then
+				-- Сразу ставим на площадку случайного подбора — ждать нового напарника
+				teleport(member, WorldService.getRandomPadCFrame())
 				NotifyRemote:FireClient(
 					member,
-					"Напарник вышел из игры. Найди нового на площадке!",
+					"Напарник вышел. Ищем тебе нового напарника…",
 					"error"
 				)
+			else
+				teleport(member, WorldService.getLobbyCFrame())
 			end
 		end
 	end

@@ -47,7 +47,9 @@ local function owningPart(instance: Instance): BasePart?
 end
 
 local function applyDecoration(instance: Instance, visible: boolean)
-	if instance:IsA("Decal") then -- Texture тоже Decal
+	if instance:IsA("SelectionBox") then
+		instance.Visible = visible
+	elseif instance:IsA("Decal") then -- Texture тоже Decal
 		pcall(function()
 			(instance :: any).LocalTransparencyModifier = if visible then 0 else 1
 		end)

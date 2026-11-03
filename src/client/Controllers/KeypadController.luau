@@ -120,11 +120,19 @@ local function build()
 			Font = Ui.FontHeavy,
 			TextScaled = true,
 			TextColor3 = Color3.new(1, 1, 1),
-			Text = key,
+			Text = if key == "⌫" or key == "OK" then "" else key,
 			AutoButtonColor = true,
 			Corner = UDim.new(0, 10),
 			Parent = grid,
 		})
+		if key == "⌫" or key == "OK" then
+			Ui.icon(if key == "OK" then "check" else "backspace", {
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = UDim2.fromScale(0.55, 0.7),
+				Parent = button,
+			})
+		end
 		button.Activated:Connect(function()
 			press(key)
 		end)
@@ -136,12 +144,15 @@ local function build()
 		Position = UDim2.fromScale(1, 0),
 		Size = UDim2.fromOffset(40, 40),
 		BackgroundColor3 = Colors.Danger,
-		Font = Ui.FontHeavy,
-		TextScaled = true,
-		TextColor3 = Color3.new(1, 1, 1),
-		Text = "✕",
+		Text = "",
 		Corner = UDim.new(1, 0),
 		Parent = panel,
+	})
+	Ui.icon("close", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromScale(0.5, 0.5),
+		Parent = closeButton,
 	})
 	closeButton.Activated:Connect(close)
 end

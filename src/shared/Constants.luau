@@ -31,6 +31,7 @@ Constants.Attr = {
 	CodeIndex = "CodeIndex",
 	PadTitle = "PadTitle",
 	PadSolo = "PadSolo", -- площадка «Тест одному» (только в Studio)
+	PadRandom = "PadRandom", -- площадка случайного подбора (сюда отправляем, если напарник ушёл)
 }
 
 -- Цвета миров (используются конструктором комнат и интерфейсом).

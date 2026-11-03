@@ -8,5 +8,7 @@ return {
 		require(script.Room01_TwoSides),
 		require(script.Room02_BoxBridge),
 		require(script.Room03_Cipher),
+		require(script.Room04_Lifts),
+		require(script.Room05_SpotDifference),
 	},
 }
