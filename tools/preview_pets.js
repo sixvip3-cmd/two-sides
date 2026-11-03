@@ -27,7 +27,7 @@ function wedgeGeometry(){
 }
 const geos = {ell: new THREE.SphereGeometry(.5, 32, 20), block: new THREE.BoxGeometry(1,1,1), wedge: wedgeGeometry(),
   cyl: new THREE.CylinderGeometry(.5,.5,1,24).rotateZ(Math.PI/2)};
-window.renderPet = function(spec, yaw){
+window.renderPet = function(spec, yaw, closeup){
   const scene = new THREE.Scene();
   scene.add(new THREE.HemisphereLight(0xffffff, 0x55556a, 1.6));
   const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(-3,6,-5); scene.add(sun);
@@ -46,7 +46,7 @@ window.renderPet = function(spec, yaw){
   }
   group.rotation.y = yaw; scene.add(group);
   const cam = new THREE.PerspectiveCamera(32, 1, .1, 100);
-  cam.position.set(0, 1.5, -6.2); cam.lookAt(0, 1.15, 0);
+  if (closeup) { cam.position.set(0, 1.5, -3.4); cam.lookAt(0, 1.35, 0); } else { cam.position.set(0, 1.5, -6.2); cam.lookAt(0, 1.15, 0); }
   renderer.render(scene, cam);
   return document.getElementById('c').toDataURL('image/png');
 };
@@ -58,20 +58,23 @@ window.renderPet = function(spec, yaw){
   const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage();
   await page.setContent(html);
-  const entries = Object.entries(specs.pets);
+  // CLOSEUP=Kitten,Owl — крупный план мордочек (в assets/pets-closeup.png)
+  const closeup = process.env.CLOSEUP ? process.env.CLOSEUP.split(',') : null;
+  let entries = Object.entries(specs.pets);
   entries.push(['Egg', specs.egg]);
+  if (closeup) entries = entries.filter(([id]) => closeup.includes(id));
   const tiles = [];
   for (const [id, spec] of entries) {
-    const url = await page.evaluate(([s]) => window.renderPet(s, 0.45), [spec]);
+    const url = await page.evaluate(([s, c]) => window.renderPet(s, c ? 0.25 : 0.45, c), [spec, !!closeup]);
     const buf = Buffer.from(url.split(',')[1], 'base64');
-    fs.writeFileSync(path.join(outDir, id + '.png'), buf);
+    if (!closeup) fs.writeFileSync(path.join(outDir, id + '.png'), buf);
     tiles.push({ id, url });
   }
   // общий лист
   const sheet = await browser.newPage({ viewport: { width: 1560, height: 1300 } });
   await sheet.setContent(`<body style="margin:0;background:#15151c;font-family:Inter;color:#fff;display:flex;flex-wrap:wrap;gap:8px;padding:12px">
     ${tiles.map(t => `<div style="width:300px;text-align:center"><img src="${t.url}" width="300" height="300"><div style="font-size:22px;font-weight:800">${t.id}</div></div>`).join('')}</body>`);
-  await sheet.screenshot({ path: path.join(ROOT, 'assets', 'pets-preview.png'), fullPage: true });
+  await sheet.screenshot({ path: closeup ? (process.env.OUT || path.join(ROOT, 'assets', 'pets-closeup.png')) : path.join(ROOT, 'assets', 'pets-preview.png'), fullPage: true });
   await browser.close();
   console.log('rendered', tiles.length);
 })();
