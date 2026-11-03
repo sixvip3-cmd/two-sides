@@ -7,6 +7,7 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Constants = require(ReplicatedStorage.Shared.Constants)
@@ -103,6 +104,21 @@ local function buildDefaultLobby(folder: Folder)
 	})
 	randomPad:SetAttribute(Attr.PadTitle, "Случайный напарник")
 	addBillboard(randomPad, "Случайный напарник")
+
+	-- Площадка для разработчика: пройти комнаты одному, переключая миры клавишей T
+	if RunService:IsStudio() then
+		local soloPad = makePart({
+			Name = "SoloTestPad",
+			Size = Vector3.new(10, 0.6, 10),
+			Position = Vector3.new(30, 0.3, 30),
+			Color = Color3.fromRGB(255, 120, 200),
+			Material = Enum.Material.Neon,
+			Parent = folder,
+		})
+		soloPad:SetAttribute(Attr.PadTitle, "Тест одному (Studio)")
+		soloPad:SetAttribute(Attr.PadSolo, true)
+		addBillboard(soloPad, "Тест одному (Studio)")
+	end
 
 	-- Табличка с названием
 	local sign = makePart({

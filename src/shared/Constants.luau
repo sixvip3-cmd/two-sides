@@ -30,6 +30,7 @@ Constants.Attr = {
 	CodeGroup = "CodeGroup",
 	CodeIndex = "CodeIndex",
 	PadTitle = "PadTitle",
+	PadSolo = "PadSolo", -- площадка «Тест одному» (только в Studio)
 }
 
 -- Цвета миров (используются конструктором комнат и интерфейсом).
@@ -53,6 +54,7 @@ Constants.Remotes = {
 	"SessionState", -- server → client: (state: table?) — nil означает «в лобби»
 	"OpenKeypad", -- server → client: (keypad: BasePart, length: number)
 	"SubmitCode", -- client → server: (keypad: BasePart, code: string)
+	"SwitchSide", -- client → server: () — сменить мир (только в соло-режиме)
 }
 
 return Constants

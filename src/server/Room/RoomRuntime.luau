@@ -39,6 +39,9 @@ RoomRuntime.__index = RoomRuntime
 -- Насколько далеко от центра (по X/Z) игрок считается «в комнате».
 local ROOM_REACH = 150
 
+-- Соло-тест: сколько секунд плита остаётся нажатой после того, как с неё сошли.
+local SOLO_PLATE_HOLD = 6
+
 local function getRoot(player: Player): BasePart?
 	local character = player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -328,6 +331,29 @@ function RoomRuntime:_tick()
 				end
 			end
 		end
+		-- Соло-тест: плита держится SOLO_PLATE_HOLD секунд после того, как с неё сошли,
+		-- чтобы успеть сменить мир и пройти в открытую дверь.
+		if self.session.solo then
+			local now = os.clock()
+			if pressed then
+				plate.releasedAt = nil
+			elseif plate.pressed then
+				if not plate.releasedAt then
+					plate.releasedAt = now
+					self.session:notify(
+						nil,
+						"Плита держится " .. SOLO_PLATE_HOLD .. " сек — жми T и проходи!",
+						"info"
+					)
+				end
+				if now - plate.releasedAt < SOLO_PLATE_HOLD then
+					pressed = true
+				else
+					plate.releasedAt = nil
+				end
+			end
+		end
+
 		if pressed ~= plate.pressed then
 			plate.pressed = pressed
 			plate.onChanged(pressed)
@@ -363,7 +389,8 @@ function RoomRuntime:_tick()
 		end
 	end
 
-	if total >= 2 and inside == total then
+	local needed = if self.session.solo then 1 else 2
+	if total >= needed and inside == total then
 		self.completed = true
 		self.Completed:Fire()
 	end

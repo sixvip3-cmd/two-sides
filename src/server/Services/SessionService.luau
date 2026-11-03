@@ -47,6 +47,7 @@ export type Session = typeof(setmetatable(
 		room: any,
 		roomConnection: any,
 		ended: boolean,
+		solo: boolean,
 	},
 	Session
 ))
@@ -119,6 +120,7 @@ function Session:sendState()
 			roomCount = #Rooms.list,
 			roomName = def and def.Name or "",
 			hint = def and def.Hints and def.Hints[side] or "",
+			solo = self.solo,
 		})
 	end
 end
@@ -131,6 +133,20 @@ function Session:placePlayer(player: Player)
 	end
 	CollisionService.setCharacterSide(character, self.players[player])
 	teleport(player, self.room:getSpawnCFrame(self.players[player]))
+end
+
+-- Соло-режим: игрок переключается между мирами (сам играет за обоих).
+function Session:switchSide(player: Player)
+	if not self.solo or not self.players[player] then
+		return
+	end
+	local newSide = if self.players[player] == Side.Light then Side.Dark else Side.Light
+	self.players[player] = newSide
+	player:SetAttribute(Attr.Side, newSide)
+	if player.Character then
+		CollisionService.setCharacterSide(player.Character, newSide)
+	end
+	self:sendState()
 end
 
 function Session:loadRoom(index: number)
@@ -185,15 +201,30 @@ function SessionService.getSession(player: Player): Session?
 	return sessionByPlayer[player]
 end
 
-function SessionService.create(pair: { Player }): Session?
-	local a, b = pair[1], pair[2]
-	for _, player in { a, b } do
+-- pair — два игрока; с opts.solo = true — один (тест в Studio, позже соло-режим).
+function SessionService.create(pair: { Player }, opts: { solo: boolean? }?): Session?
+	local solo = opts ~= nil and opts.solo == true
+	local needed = if solo then 1 else 2
+	if #pair < needed then
+		return nil
+	end
+	for i = 1, needed do
+		local player = pair[i]
 		if not player or player.Parent ~= Players or sessionByPlayer[player] then
 			return nil
 		end
 	end
-	if math.random() < 0.5 then
-		a, b = b, a
+
+	local players = {}
+	if solo then
+		players[pair[1]] = Side.Light
+	else
+		local a, b = pair[1], pair[2]
+		if math.random() < 0.5 then
+			a, b = b, a
+		end
+		players[a] = Side.Light
+		players[b] = Side.Dark
 	end
 
 	local slot = allocateSlot()
@@ -206,7 +237,8 @@ function SessionService.create(pair: { Player }): Session?
 		slot = slot,
 		origin = CFrame.new(Config.SESSION_BASE + Vector3.new(slot * Config.SESSION_SPACING, 0, 0)),
 		folder = folder,
-		players = { [a] = Side.Light, [b] = Side.Dark },
+		players = players,
+		solo = solo,
 		roomIndex = 0,
 		room = nil,
 		roomConnection = nil,
@@ -222,11 +254,10 @@ function SessionService.create(pair: { Player }): Session?
 
 	session:loadRoom(1)
 	for member, side in session.players do
-		session:notify(
-			member,
-			"Ты в " .. Constants.SideNames[side] .. ". Напарник видит другую сторону!",
-			"info"
-		)
+		local text = if solo
+			then "Тест одному: нажми T (или кнопку справа), чтобы сменить мир"
+			else "Ты в " .. Constants.SideNames[side] .. ". Напарник видит другую сторону!"
+		session:notify(member, text, "info")
 	end
 	return session
 end
@@ -312,6 +343,13 @@ function SessionService.Start()
 		local session = sessionByPlayer[player]
 		if session then
 			SessionService.endSession(session, "partner_left")
+		end
+	end)
+
+	Net.get("SwitchSide").OnServerEvent:Connect(function(player)
+		local session = sessionByPlayer[player]
+		if session then
+			session:switchSide(player)
 		end
 	end)
 

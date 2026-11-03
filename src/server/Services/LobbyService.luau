@@ -72,6 +72,32 @@ local function updatePad(pad: PadState, now: number)
 	end
 	pad.occupants = occupants
 
+	-- Площадка «Тест одному» (только в Studio): старт с одним игроком
+	if pad.solo then
+		local first = occupants[1]
+		if first and now >= pad.cooldownUntil then
+			if not pad.countdownEnd or not pad.countdownPair or pad.countdownPair[1] ~= first then
+				pad.countdownEnd = now + Config.MATCH_COUNTDOWN
+				pad.countdownPair = { first }
+			end
+			local left = math.ceil((pad.countdownEnd :: number) - now)
+			if left <= 0 then
+				pad.countdownEnd = nil
+				pad.countdownPair = nil
+				pad.cooldownUntil = now + Config.PAD_COOLDOWN
+				SessionService.create({ first }, { solo = true })
+				setLabel(pad, pad.title)
+			else
+				setLabel(pad, string.format("%s\nСтарт через %d…", pad.title, left))
+			end
+		else
+			pad.countdownEnd = nil
+			pad.countdownPair = nil
+			setLabel(pad, pad.title .. "\nвстань сюда один")
+		end
+		return
+	end
+
 	if #occupants >= 2 and now >= pad.cooldownUntil then
 		local first, second = occupants[1], occupants[2]
 		local pair = pad.countdownPair
@@ -112,6 +138,7 @@ function LobbyService.Init(services)
 		table.insert(pads, {
 			part = part,
 			title = part:GetAttribute(Constants.Attr.PadTitle),
+			solo = part:GetAttribute(Constants.Attr.PadSolo) == true,
 			occupants = {},
 			countdownEnd = nil,
 			countdownPair = nil,

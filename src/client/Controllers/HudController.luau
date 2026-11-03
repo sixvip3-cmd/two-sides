@@ -9,6 +9,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local Constants = require(ReplicatedStorage.Shared.Constants)
 local Net = require(ReplicatedStorage.Shared.Net)
@@ -28,6 +29,8 @@ local sideBadge: TextLabel
 local hintFrame: Frame
 local hintLabel: TextLabel
 local toastList: Frame
+local switchButton: TextButton
+local isSolo = false
 
 local KIND_COLORS = {
 	info = Color3.fromRGB(70, 130, 220),
@@ -132,6 +135,32 @@ local function build()
 		Parent = hintFrame,
 	})
 
+	-- Кнопка смены мира (только соло-тест)
+	switchButton = Ui.new("TextButton", {
+		Name = "SwitchSide",
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -16, 0.5, 0),
+		Size = UDim2.fromOffset(150, 64),
+		BackgroundColor3 = Color3.fromRGB(255, 120, 200),
+		Font = Ui.FontHeavy,
+		TextScaled = true,
+		TextColor3 = Color3.new(1, 1, 1),
+		Text = "☀ ⇄ ☾\nСменить мир (T)",
+		Visible = false,
+		Corner = UDim.new(0, 12),
+		Parent = gui,
+	}, {
+		Ui.new("UIPadding", {
+			PaddingLeft = UDim.new(0, 8),
+			PaddingRight = UDim.new(0, 8),
+			PaddingTop = UDim.new(0, 6),
+			PaddingBottom = UDim.new(0, 6),
+		}),
+	})
+	switchButton.Activated:Connect(function()
+		Net.get("SwitchSide"):FireServer()
+	end)
+
 	toastList = Ui.new("Frame", {
 		Name = "Toasts",
 		AnchorPoint = Vector2.new(0.5, 0),
@@ -206,8 +235,12 @@ local function onState(state)
 	if not state then
 		topBar.Visible = false
 		hintFrame.Visible = false
+		switchButton.Visible = false
+		isSolo = false
 		return
 	end
+	isSolo = state.solo == true
+	switchButton.Visible = isSolo
 	topBar.Visible = true
 	roomTitle.Text = state.roomName
 	roomSubtitle.Text = string.format(
@@ -228,6 +261,12 @@ function HudController.Start()
 	Net.get("SessionState").OnClientEvent:Connect(onState)
 	Net.get("Notify").OnClientEvent:Connect(function(text, kind)
 		HudController.toast(text, kind)
+	end)
+
+	UserInputService.InputBegan:Connect(function(input, processed)
+		if not processed and isSolo and input.KeyCode == Enum.KeyCode.T then
+			Net.get("SwitchSide"):FireServer()
+		end
 	end)
 end
 
