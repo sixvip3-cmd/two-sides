@@ -56,6 +56,13 @@ Constants.Remotes = {
 	"OpenKeypad", -- server → client: (keypad: BasePart, length: number)
 	"SubmitCode", -- client → server: (keypad: BasePart, code: string)
 	"SwitchSide", -- client → server: () — сменить мир (только в соло-режиме)
+	"Inventory", -- server → client: (inventory: table) — осколки, компаньоны, пассы
+	"RequestInventory", -- client → server: () — прислать инвентарь
+	"Purchase", -- client → server: (key: string) — купить товар/пасс из EconomyConfig
+	"UseSkip", -- client → server: () — пропустить комнату (кредит или покупка)
+	"OpenEgg", -- client → server: (eggId: string, useFree: boolean?)
+	"EggResult", -- server → client: ({ companion: string, isNew: boolean })
+	"EquipCompanion", -- client → server: (companionId: string) — "" снять
 }
 
 return Constants

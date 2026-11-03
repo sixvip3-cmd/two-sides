@@ -11,6 +11,9 @@ Net.setup()
 local ORDER = {
 	"CollisionService",
 	"WorldService",
+	"DataService",
+	"EconomyService",
+	"CompanionService",
 	"SessionService",
 	"LobbyService",
 }

@@ -24,6 +24,7 @@ local SessionService = {}
 
 local CollisionService
 local WorldService
+local EconomyService
 
 local NotifyRemote: RemoteEvent
 local StateRemote: RemoteEvent
@@ -172,10 +173,27 @@ function Session:loadRoom(index: number)
 	self:sendState()
 end
 
+-- Пропуск комнаты (оплачен игроком `byPlayer`). true — комната пропущена.
+function Session:skipRoom(byPlayer: Player): boolean
+	if self.ended or not self.room then
+		return false
+	end
+	if self.room:forceComplete() then
+		self:notify(
+			nil,
+			byPlayer.DisplayName .. " пропустил комнату для вас обоих ⏭",
+			"success"
+		)
+		return true
+	end
+	return false
+end
+
 function Session:onRoomCompleted()
 	if self.ended then
 		return
 	end
+	EconomyService.onRoomCompleted(self, self.room ~= nil and self.room.skipped == true)
 	if self.roomIndex < #Rooms.list then
 		self:notify(nil, "Комната пройдена! ✨", "success")
 		self:loadRoom(self.roomIndex + 1)
@@ -185,6 +203,7 @@ function Session:onRoomCompleted()
 			"Глава пройдена! 🎉 Отличная командная работа",
 			"success"
 		)
+		EconomyService.onChapterCompleted(self)
 		SessionService.endSession(self, "completed")
 	end
 end
@@ -252,6 +271,7 @@ function SessionService.create(pair: { Player }, opts: { solo: boolean? }?): Ses
 		member:SetAttribute(Attr.SessionId, session.id)
 	end
 
+	EconomyService.onSessionStarted(session)
 	session:loadRoom(1)
 	for member, side in session.players do
 		local text = if solo
@@ -306,6 +326,7 @@ end
 function SessionService.Init(services)
 	CollisionService = services.CollisionService
 	WorldService = services.WorldService
+	EconomyService = services.EconomyService
 
 	NotifyRemote = Net.get("Notify")
 	StateRemote = Net.get("SessionState")

@@ -409,6 +409,17 @@ function RoomRuntime:_tick()
 	end
 end
 
+-- Завершить комнату досрочно (пропуск за Robux). true — если получилось.
+function RoomRuntime:forceComplete(): boolean
+	if self.completed or self.destroyed then
+		return false
+	end
+	self.completed = true
+	self.skipped = true
+	self.Completed:Fire()
+	return true
+end
+
 function RoomRuntime:Destroy()
 	if self.destroyed then
 		return
